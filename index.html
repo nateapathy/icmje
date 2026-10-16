@@ -383,6 +383,11 @@ const ITEMS = [
     fields: [{ key: "type", label: "Kind of interest", opts: ["Financial interest", "Non-financial interest", "Employment", "Ownership or founder", "Personal relationship"] }] },
 ];
 
+// "past 36 months" is hard to picture, so anchor it to a calendar month: today's month, three years ago.
+const SINCE = (() => { const d = new Date(); return d.toLocaleString("en-US", { month: "long" }) + " " + (d.getFullYear() - 3); })();
+const p36 = str => str.replace(/past 36 months/i, m => `${m} (since ${SINCE})`);
+ITEMS.forEach(it => { it.ask = p36(it.ask); if (it.frame) it.frame = p36(it.frame); });
+
 /* ---------- State ---------- */
 const KEY = "icmje-helper-v1";
 const today = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
@@ -467,7 +472,7 @@ function renderRail() {
   ol.append(item(0, "•", "Manuscript details", S.name && S.title ? "st-none" : ""));
   ol.append(h("li", { class: "grp" }, "Since planning of the work"));
   ol.append(item(1, "1", ITEMS[0].short, statusOf(0) ? "st-" + statusOf(0) : ""));
-  ol.append(h("li", { class: "grp" }, "Past 36 months"));
+  ol.append(h("li", { class: "grp" }, p36("Past 36 months")));
   for (let i = 1; i < 13; i++) ol.append(item(i + 1, String(i + 1), ITEMS[i].short, statusOf(i) ? "st-" + statusOf(i) : ""));
   ol.append(h("li", { class: "grp" }, "Finish"));
   ol.append(item(14, "✓", "Review & download", S.certify ? "st-none" : ""));
@@ -494,7 +499,7 @@ function paneDetails() {
       textField("f-title", "Manuscript title", "title"),
       textField("f-msno", "Manuscript number", "msno", true),
       h("p", { class: "formtext" }, "Disclose all relationships, activities and interests related to the content of your manuscript. “Related” means any relation with for-profit or not-for-profit third parties whose interests may be affected by the content of the manuscript. If you are in doubt about whether to list something, list it."),
-      h("p", { class: "hint" }, "Item 1 has no time limit. Items 2–13 cover the past 36 months."))
+      h("p", { class: "hint" }, p36("Item 1 has no time limit. Items 2–13 cover the past 36 months.")))
   ];
 }
 
@@ -552,7 +557,7 @@ function entryCard(i, item, e, k, refreshPreview) {
 function paneItem(i) {
   const item = ITEMS[i], it = S.items[i];
   const out = [];
-  out.push(h("div", { class: "band" }, item.frame || "Time frame: past 36 months"));
+  out.push(h("div", { class: "band" }, item.frame || p36("Time frame: past 36 months")));
   const pane = h("div", { class: "pane" },
     h("div", null, h("div", { class: "eyebrow" }, `Item ${item.n} of 13`), h("h2", null, item.ask)),
     h("p", { class: "formtext" }, "Form wording: ", item.q, item.note ? " " + item.note : ""),
